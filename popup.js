@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { defaultTitle, customPrompt } = await chrome.storage.sync.get(['defaultTitle', 'customPrompt']);
   if (defaultTitle) {
     document.getElementById('fileTitle').value = defaultTitle;
+  } else {
+    // Set default title with timestamp
+    const now = new Date();
+    const timestamp = now.toISOString().slice(0, 19).replace('T', '-').replace(/:/g, '');
+    document.getElementById('fileTitle').value = `Transcription-${timestamp}`;
   }
 
   // Load custom prompt or use default
@@ -608,7 +613,18 @@ function startSelection() {
 
   let startX, startY, isSelecting = false;
 
-  overlay.addEventListener('mousedown', (e) => {
+  // Function to clean up and remove elements
+  const cleanup = () => {
+    overlay.removeEventListener('mousedown', handleMouseDown);
+    overlay.removeEventListener('mousemove', handleMouseMove);
+    overlay.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('keydown', handleKeyDown);
+    overlay.remove();
+    selectionBox.remove();
+    isSelecting = false;
+  };
+
+  const handleMouseDown = (e) => {
     isSelecting = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -617,9 +633,9 @@ function startSelection() {
     selectionBox.style.width = '0px';
     selectionBox.style.height = '0px';
     selectionBox.style.display = 'block';
-  });
+  };
 
-  overlay.addEventListener('mousemove', (e) => {
+  const handleMouseMove = (e) => {
     if (!isSelecting) return;
 
     const currentX = e.clientX;
@@ -634,9 +650,9 @@ function startSelection() {
     selectionBox.style.height = height + 'px';
     selectionBox.style.left = left + 'px';
     selectionBox.style.top = top + 'px';
-  });
+  };
 
-  overlay.addEventListener('mouseup', async (e) => {
+  const handleMouseUp = async (e) => {
     if (!isSelecting) return;
 
     const endX = e.clientX;
@@ -649,9 +665,8 @@ function startSelection() {
       height: Math.abs(endY - startY)
     };
 
-    // Clean up UI
-    overlay.remove();
-    selectionBox.remove();
+    // Clean up UI and event listeners
+    cleanup();
 
     // Capture the selected area
     if (rect.width > 10 && rect.height > 10) {
@@ -660,5 +675,16 @@ function startSelection() {
         rect: rect
       });
     }
-  });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      cleanup();
+    }
+  };
+
+  overlay.addEventListener('mousedown', handleMouseDown);
+  overlay.addEventListener('mousemove', handleMouseMove);
+  overlay.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('keydown', handleKeyDown);
 }
