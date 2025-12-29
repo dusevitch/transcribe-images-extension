@@ -615,16 +615,21 @@ function startSelection() {
 
   // Function to clean up and remove elements
   const cleanup = () => {
-    overlay.removeEventListener('mousedown', handleMouseDown);
-    overlay.removeEventListener('mousemove', handleMouseMove);
-    overlay.removeEventListener('mouseup', handleMouseUp);
-    document.removeEventListener('keydown', handleKeyDown);
-    overlay.remove();
-    selectionBox.remove();
     isSelecting = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('keydown', handleKeyDown);
+    if (overlay && overlay.parentNode) {
+      overlay.remove();
+    }
+    if (selectionBox && selectionBox.parentNode) {
+      selectionBox.remove();
+    }
   };
 
   const handleMouseDown = (e) => {
+    if (isSelecting) return; // Prevent multiple selections
+
     isSelecting = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -633,6 +638,10 @@ function startSelection() {
     selectionBox.style.width = '0px';
     selectionBox.style.height = '0px';
     selectionBox.style.display = 'block';
+
+    // Add mouse event listeners to document for better tracking
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleMouseMove = (e) => {
@@ -665,7 +674,7 @@ function startSelection() {
       height: Math.abs(endY - startY)
     };
 
-    // Clean up UI and event listeners
+    // Clean up UI and event listeners FIRST
     cleanup();
 
     // Capture the selected area
@@ -684,7 +693,5 @@ function startSelection() {
   };
 
   overlay.addEventListener('mousedown', handleMouseDown);
-  overlay.addEventListener('mousemove', handleMouseMove);
-  overlay.addEventListener('mouseup', handleMouseUp);
   document.addEventListener('keydown', handleKeyDown);
 }
