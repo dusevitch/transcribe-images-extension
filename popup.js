@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Event listeners
   document.getElementById('captureBtn').addEventListener('click', captureScreenshot);
   document.getElementById('clearImages').addEventListener('click', clearImages);
+  document.getElementById('downloadImages').addEventListener('click', downloadAllImages);
+  document.getElementById('copyImages').addEventListener('click', copyAllImages);
   document.getElementById('transcribeBtn').addEventListener('click', transcribeImages);
   document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
   document.getElementById('downloadBtn').addEventListener('click', downloadDocument);
@@ -106,6 +108,128 @@ function clearImages() {
   document.getElementById('resultSection').classList.add('hidden');
   transcribedHTML = '';
   showStatus('All images cleared', 'info');
+}
+
+async function downloadAllImages() {
+  if (capturedImages.length === 0) {
+    showStatus('No images to download', 'error');
+    return;
+  }
+
+  showStatus('Preparing images for download...', 'info');
+
+  try {
+    if (capturedImages.length === 1) {
+      // Single image - download directly
+      downloadSingleImage(capturedImages[0].data, 'screenshot-1.png');
+      showStatus('Image downloaded!', 'success');
+    } else {
+      // Multiple images - create a ZIP file
+      await downloadImagesAsZip();
+      showStatus(`Downloaded ${capturedImages.length} images as ZIP!`, 'success');
+    }
+  } catch (error) {
+    showStatus('Download failed: ' + error.message, 'error');
+  }
+}
+
+function downloadSingleImage(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+async function downloadImagesAsZip() {
+  // Use JSZip library (we'll add it to the HTML)
+  if (typeof JSZip === 'undefined') {
+    // Fallback: download images individually
+    capturedImages.forEach((img, index) => {
+      setTimeout(() => {
+        downloadSingleImage(img.data, `screenshot-${index + 1}.png`);
+      }, index * 200); // Stagger downloads
+    });
+    return;
+  }
+
+  const zip = new JSZip();
+  const imgFolder = zip.folder('screenshots');
+
+  // Add each image to the ZIP
+  capturedImages.forEach((img, index) => {
+    const base64Data = img.data.split(',')[1];
+    imgFolder.file(`screenshot-${index + 1}.png`, base64Data, { base64: true });
+  });
+
+  // Generate and download the ZIP
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `screenshots-${Date.now()}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function copyAllImages() {
+  if (capturedImages.length === 0) {
+    showStatus('No images to copy', 'error');
+    return;
+  }
+
+  showStatus('Copying images to clipboard...', 'info');
+
+  try {
+    // Convert data URLs to blobs
+    const imageBlobs = await Promise.all(
+      capturedImages.map(async (img) => {
+        const response = await fetch(img.data);
+        return await response.blob();
+      })
+    );
+
+    // Create ClipboardItem with all images
+    const clipboardItems = imageBlobs.map(blob => {
+      return new ClipboardItem({ 'image/png': blob });
+    });
+
+    // Copy to clipboard (note: only the first image will be copied due to browser limitations)
+    // For multiple images, we'll copy the first one and provide feedback
+    if (clipboardItems.length > 0) {
+      await navigator.clipboard.write([clipboardItems[0]]);
+
+      if (capturedImages.length === 1) {
+        showStatus('Image copied to clipboard!', 'success');
+      } else {
+        showStatus(`First image copied! (Browser limits clipboard to 1 image. Use Download All for ${capturedImages.length} images)`, 'info');
+      }
+    }
+  } catch (error) {
+    // Fallback: Copy as HTML with embedded images
+    try {
+      const htmlContent = capturedImages.map((img, index) =>
+        `<img src="${img.data}" alt="Screenshot ${index + 1}" />`
+      ).join('\n');
+
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+      const textBlob = new Blob([`${capturedImages.length} screenshot(s) captured`], { type: 'text/plain' });
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': textBlob
+        })
+      ]);
+
+      showStatus('Images copied as HTML! Paste into Word/Docs.', 'success');
+    } catch (err) {
+      showStatus('Copy failed. Try Download All instead.', 'error');
+    }
+  }
 }
 
 async function saveImagesToStorage() {

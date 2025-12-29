@@ -237,7 +237,11 @@
   <div id="imagesSection" class="section hidden">
     <label>Captured Images (<span id="imageCount">0</span>)</label>
     <div id="imagesList" class="images-list"></div>
-    <button id="clearImages" class="button secondary">Clear All</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+      <button id="downloadImages" class="button secondary">📥 Download All</button>
+      <button id="copyImages" class="button secondary">📋 Copy Images</button>
+    </div>
+    <button id="clearImages" class="button secondary" style="margin-top: 8px;">🗑️ Clear All</button>
   </div>
 
   <div id="transcribeSection" class="section hidden">
@@ -272,6 +276,7 @@
   </div>
 
   <!-- External Libraries for Document Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

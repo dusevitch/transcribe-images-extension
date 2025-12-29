@@ -7,6 +7,7 @@ A Chrome extension that captures screenshots with area selection and transcribes
 - 📸 **Area Selection Screenshot** - Click and drag to select specific regions
 - 🖼️ **Image Thumbnails** - Preview all captured screenshots before transcription
 - 🔄 **Multiple Screenshots** - Capture and queue multiple images
+- 📥 **Download/Copy Screenshots** - Download all images as ZIP or copy to clipboard for use in other tools/LLMs
 - ✨ **AI Transcription** - Uses Gemini 1.5 Flash for accurate OCR with formatting preservation
 - 📝 **Rich Text Output** - Preserves bold, italics, bullet points, tables, and colors
 - 📋 **One-Click Copy** - Copy formatted text directly to clipboard (paste into Word, Google Docs, etc.)
@@ -49,13 +50,18 @@ A Chrome extension that captures screenshots with area selection and transcribes
    - Repeat for multiple screenshots (thumbnails will appear)
    - Each screenshot is numbered and can be removed individually
 
-2. **Transcribe**
+2. **Export Screenshots (Optional)**
+   - **Download All**: Downloads all screenshots as a ZIP file (or individual PNGs if just one)
+   - **Copy Images**: Copies images to clipboard (first image if multiple) or as HTML for pasting into documents
+   - Great for sharing screenshots or using them in other LLMs/tools!
+
+3. **Transcribe**
    - After capturing all needed screenshots
    - Click "✨ Transcribe with Gemini"
    - Wait for AI processing (usually a few seconds)
    - The transcribed text appears in a formatted preview box
 
-3. **Copy or Download**
+4. **Copy or Download Transcription**
    - **Copy**: Click "📋 Copy" to copy formatted text to clipboard
      - Paste directly into Word, Google Docs, Notion, etc. with formatting preserved!
    - **Download**: Choose format (Word, HTML, PDF, or text) and click "💾 Download"
@@ -73,6 +79,8 @@ A Chrome extension that captures screenshots with area selection and transcribes
 
 - **Multiple Screenshots**: The extension preserves the exact order you capture images
 - **Remove Screenshots**: Click the "×" next to any screenshot thumbnail to remove it
+- **Download Screenshots**: Use "Download All" to get a ZIP of all screenshots (great for backup or sharing)
+- **Copy Images**: Use "Copy Images" to copy to clipboard - paste into other LLMs like ChatGPT, Claude, or documents
 - **Clear All**: Use "Clear All" to start over
 - **Edit Transcription**: The output box is editable - click to make changes before copying/downloading
 - **Auto-Clear**: Enable in settings to automatically clear images after downloading
@@ -145,9 +153,14 @@ When changes are pushed to GitHub:
 
 ## Version
 
-Current version: 1.1.0
+Current version: 1.2.0
 
 ## Changelog
+
+### v1.2.0
+- 📥 Added "Download All" button to export screenshots as ZIP file
+- 📋 Added "Copy Images" button to copy screenshots to clipboard
+- 🔄 Screenshots can now be exported for use in other tools/LLMs
 
 ### v1.1.0
 - ✨ Added rich text formatting support (bold, italics, lists, tables, colors)
