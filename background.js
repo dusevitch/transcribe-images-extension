@@ -8,16 +8,27 @@ async function captureSelectedArea(tabId, rect) {
   try {
     // Capture the entire visible tab
     const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-    
+
     // Crop the image to the selected area
     const croppedImage = await cropImage(dataUrl, rect);
-    
-    // Send back to popup
+
+    // Store directly in chrome.storage
+    const { images } = await chrome.storage.local.get(['images']);
+    const currentImages = images || [];
+    currentImages.push({
+      data: croppedImage,
+      timestamp: Date.now()
+    });
+    await chrome.storage.local.set({ images: currentImages });
+
+    // Also send message to popup if it's open
     chrome.runtime.sendMessage({
       type: 'screenshotCaptured',
       data: croppedImage
+    }).catch(() => {
+      // Popup might be closed, that's okay since we stored it
     });
-    
+
   } catch (error) {
     console.error('Capture failed:', error);
   }

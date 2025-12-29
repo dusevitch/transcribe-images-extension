@@ -16,11 +16,16 @@ Provide ONLY the HTML content without wrapping it in <html>, <body>, or \`\`\`ht
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Load saved images from storage
-  const { images } = await chrome.storage.local.get(['images']);
-  if (images && images.length > 0) {
-    capturedImages = images;
-    updateImagesList();
-  }
+  await loadImagesFromStorage();
+
+  // Listen for storage changes (when background script adds new images)
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.images) {
+      capturedImages = changes.images.newValue || [];
+      updateImagesList();
+      showStatus('Screenshot captured!', 'success');
+    }
+  });
 
   // Event listeners
   document.getElementById('captureBtn').addEventListener('click', captureScreenshot);
@@ -51,6 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('customPrompt').value = promptText;
 });
 
+async function loadImagesFromStorage() {
+  const { images } = await chrome.storage.local.get(['images']);
+  if (images && images.length > 0) {
+    capturedImages = images;
+    updateImagesList();
+  }
+}
+
 async function captureScreenshot() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -63,26 +76,11 @@ async function captureScreenshot() {
 
     showStatus('Select area to capture...', 'info');
 
-    // Listen for screenshot data
-    chrome.runtime.onMessage.addListener(handleScreenshotMessage);
+    // The background script will handle capturing and storing the image
+    // The storage listener will update the UI when the image is added
 
   } catch (error) {
     showStatus('Error: ' + error.message, 'error');
-  }
-}
-
-function handleScreenshotMessage(message) {
-  if (message.type === 'screenshotCaptured') {
-    capturedImages.push({
-      data: message.data,
-      timestamp: Date.now()
-    });
-    saveImagesToStorage();
-    updateImagesList();
-    showStatus('Screenshot captured!', 'success');
-
-    // Remove listener after handling
-    chrome.runtime.onMessage.removeListener(handleScreenshotMessage);
   }
 }
 
