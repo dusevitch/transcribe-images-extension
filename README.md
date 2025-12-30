@@ -7,6 +7,8 @@ A Chrome extension that captures screenshots with area selection and transcribes
 - 📸 **Area Selection Screenshot** - Click and drag to select specific regions
 - 🖼️ **Image Thumbnails** - Preview all captured screenshots before transcription
 - 🔄 **Multiple Screenshots** - Capture and queue multiple images
+- ⋮⋮ **Drag-and-Drop Reordering** - Reorder screenshots by dragging them to change transcription order
+- 🖼️ **Image-Only Mode** - Mark screenshots to include as images without transcribing them
 - 📥 **Download/Copy Screenshots** - Download all images as ZIP or copy to clipboard for use in other tools/LLMs
   - 💾 **Individual Download** - Download any single screenshot with one click
   - 📋 **Individual Copy** - Copy any single screenshot with one click
@@ -88,6 +90,8 @@ A Chrome extension that captures screenshots with area selection and transcribes
 
 ### Tips
 
+- **Drag to Reorder**: Click and drag screenshots by the ⋮⋮ handle to reorder them - transcription follows the new order
+- **Image-Only Mode**: Check the 🖼️ checkbox next to a screenshot to include it without transcribing (useful for diagrams, charts, or images you want in the document but don't need text extracted from)
 - **Multiple Screenshots**: The extension preserves the exact order you capture images
 - **Individual Download**: Click the 💾 icon next to any screenshot to download just that image with timestamp
 - **Individual Copy**: Click the 📋 icon next to any screenshot to copy just that image
@@ -173,9 +177,14 @@ When changes are pushed to GitHub:
 
 ## Version
 
-Current version: 1.4.0
+Current version: 1.5.0
 
 ## Changelog
+
+### v1.5.0
+- ⋮⋮ **Drag-and-Drop Reordering** - Reorder screenshots by dragging them to change transcription order
+- 🖼️ **Image-Only Mode** - Mark screenshots to include as images without transcribing them (checkbox next to each screenshot)
+- ✨ **Smart Transcription** - Only transcribes unmarked images, skipping those marked as image-only
 
 ### v1.4.0
 - 📄 **Upgraded to True DOCX Format** - Replaced RTF with proper Office Open XML format for perfect table rendering

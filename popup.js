@@ -1,5 +1,6 @@
 let capturedImages = [];
 let transcribedHTML = '';
+let draggedIndex = null;
 
 const DEFAULT_PROMPT = `Transcribe all text from these images in the exact order they appear. Your output should be formatted in HTML with proper semantic tags. Use the following guidelines:
 
@@ -109,14 +110,23 @@ function updateImagesList() {
     capturedImages.forEach((img, index) => {
       const item = document.createElement('div');
       item.className = 'image-item';
+      item.setAttribute('draggable', 'true');
+      item.setAttribute('data-index', index);
+
+      const isImageOnly = img.imageOnly || false;
+
       item.innerHTML = `
+        <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
         <img src="${img.data}" alt="Screenshot ${index + 1}">
         <span>Screenshot ${index + 1}</span>
+        <input type="checkbox" class="image-only-check" data-index="${index}" title="Include as image only (don't transcribe)" ${isImageOnly ? 'checked' : ''}>
+        <label class="image-only-label" title="Include as image only (don't transcribe)">🖼️</label>
         <span class="download-single" data-index="${index}" title="Download this image">💾</span>
         <span class="copy-single" data-index="${index}" title="Copy this image">📋</span>
         <span class="remove" data-index="${index}" title="Remove this image">×</span>
       `;
 
+      // Add event listeners
       item.querySelector('.remove').addEventListener('click', (e) => {
         removeImage(parseInt(e.target.dataset.index));
       });
@@ -129,12 +139,75 @@ function updateImagesList() {
         downloadSingleImage(parseInt(e.target.dataset.index));
       });
 
+      item.querySelector('.image-only-check').addEventListener('change', (e) => {
+        toggleImageOnly(parseInt(e.target.dataset.index));
+      });
+
+      // Drag and drop event listeners
+      item.addEventListener('dragstart', handleDragStart);
+      item.addEventListener('dragover', handleDragOver);
+      item.addEventListener('drop', handleDrop);
+      item.addEventListener('dragend', handleDragEnd);
+
       imagesList.appendChild(item);
     });
   } else {
     imagesSection.classList.add('hidden');
     transcribeSection.classList.add('hidden');
   }
+}
+
+function toggleImageOnly(index) {
+  if (index >= 0 && index < capturedImages.length) {
+    capturedImages[index].imageOnly = !capturedImages[index].imageOnly;
+    saveImagesToStorage();
+    showStatus(
+      capturedImages[index].imageOnly
+        ? `Screenshot ${index + 1} marked as image-only`
+        : `Screenshot ${index + 1} will be transcribed`,
+      'info'
+    );
+  }
+}
+
+function handleDragStart(e) {
+  draggedIndex = parseInt(e.currentTarget.getAttribute('data-index'));
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+
+  const dropIndex = parseInt(e.currentTarget.getAttribute('data-index'));
+
+  if (draggedIndex !== null && draggedIndex !== dropIndex) {
+    // Reorder the array
+    const draggedItem = capturedImages[draggedIndex];
+    capturedImages.splice(draggedIndex, 1);
+    capturedImages.splice(dropIndex, 0, draggedItem);
+
+    saveImagesToStorage();
+    updateImagesList();
+    showStatus('Screenshots reordered', 'success');
+  }
+
+  return false;
+}
+
+function handleDragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+  draggedIndex = null;
 }
 
 function removeImage(index) {
@@ -374,8 +447,17 @@ async function transcribeImages() {
     // Get the current prompt (custom or default)
     const promptText = document.getElementById('customPrompt').value.trim() || DEFAULT_PROMPT;
 
-    // Prepare images for Gemini
-    const imageParts = capturedImages.map(img => ({
+    // Filter out images marked as "image-only" (only transcribe unmarked images)
+    const imagesToTranscribe = capturedImages.filter(img => !img.imageOnly);
+
+    if (imagesToTranscribe.length === 0) {
+      showStatus('All images are marked as image-only. Nothing to transcribe.', 'error');
+      document.getElementById('transcribeBtn').disabled = false;
+      return;
+    }
+
+    // Prepare images for Gemini (only the ones not marked as image-only)
+    const imageParts = imagesToTranscribe.map(img => ({
       inlineData: {
         mimeType: 'image/png',
         data: img.data.split(',')[1] // Remove data:image/png;base64, prefix

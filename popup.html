@@ -64,6 +64,21 @@
       margin: 3px 0;
       background: #f8f9fa;
       border-radius: 3px;
+      cursor: move;
+      transition: opacity 0.2s, background-color 0.2s;
+    }
+    .image-item:hover {
+      background: #e8eaed;
+    }
+    .image-item .drag-handle {
+      cursor: grab;
+      color: #5f6368;
+      font-size: 16px;
+      padding: 0 5px 0 0;
+      user-select: none;
+    }
+    .image-item .drag-handle:active {
+      cursor: grabbing;
     }
     .image-item img {
       width: 40px;
@@ -72,8 +87,19 @@
       margin-right: 10px;
       border-radius: 3px;
     }
-    .image-item .download-single {
+    .image-item .image-only-check {
       margin-left: auto;
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
+    .image-item .image-only-label {
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 5px;
+      user-select: none;
+    }
+    .image-item .download-single {
       cursor: pointer;
       color: #34a853;
       font-size: 16px;
